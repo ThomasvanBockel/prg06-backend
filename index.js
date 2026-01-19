@@ -8,10 +8,10 @@ app.use(express.json())
 try {
     await mongoose.connect(process.env.MONGODB_URL)
     app.use(express.urlencoded())
-    app.use("/notes", router)
+    app.use("/plants", router)
 } catch (e) {
     app.use((req, res) => {
-        res.status(500).send("database is kaput")
+        res.status(500).send("database is kapot")
         console.log(`error`)
     })
 }
