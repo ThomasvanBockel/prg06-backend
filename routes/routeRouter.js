@@ -110,13 +110,30 @@ router.get("/:id", async (req, res) => {
     try {
         const plantId = req.params.id;
         const plant = await Plant.findById(plantId);
+        const modifiedDate = req.headers["if-modified-since"];
+        let lastModified = plant.updatedAt;
+
         if (plant == null) {
             return res.status(404).json({message: "id bestaat niet"})
         }
         if (!mongoose.Types.ObjectId.isValid(plantId)) {
             return res.status(404).json({message: "id is niet valid"})
         }
-        res.json(plant)
+
+
+        if (!(lastModified instanceof Date)) {
+            lastModified = plant._id.getTimestamp();
+        }
+
+        res.set("Last-Modified", lastModified.toUTCString());
+
+        if (modifiedDate && new Date(modifiedDate) >= lastModified) {
+            return res.status(304).send();
+        }
+
+res.header("h")
+
+        res.status(200).json(plant)
     } catch (e) {
         res.status(404).send()
     }

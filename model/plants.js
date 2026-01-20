@@ -8,6 +8,7 @@ const plantsSchema = new mongoose.Schema({
     },
 
     {
+        timestamps: true,
         toJSON: {
             virtuals: true,
             versionKey: false,
@@ -22,7 +23,7 @@ const plantsSchema = new mongoose.Schema({
                 };
 
                 delete ret._id;
-               
+
             },
         },
 
