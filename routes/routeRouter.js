@@ -4,6 +4,7 @@ import {faker} from "@faker-js/faker/locale/nl";
 import mongoose from "mongoose";
 
 
+
 const router = express.Router()
 router.use((req, res, next) => {
     const acceptHeader = req.headers["accept"];
@@ -55,27 +56,35 @@ router.options(
         res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept")
         res.status(204).send()
     })
-router.post("/seed", async (req, res) => {
-    const plants = []
-    await Plant.deleteMany({})
-    const rawAmount = req.body?.amount ?? 10
-    const amount = Math.max(0, Math.min(500, Number(rawAmount) || 10))
+// POST overload
+router.post("/", async (req, res, next) => {
+    try {
+        if (req.body?.method && req.body?.method === "SEED") {
+            const plants = []
+            await Plant.deleteMany({})
+            const rawAmount = req.body?.amount ?? 10
+            const amount = Math.max(0, Math.min(500, Number(rawAmount) || 10))
 
 
-    for (let i = 0; i < amount; i++) {
-        const plant = Plant({
-            name: faker.lorem.slug(5),
-            description: faker.lorem.text(),
-            type: faker.food.fruit()
-        })
-        const saved = await plant.save();
-        plants.push(saved)
+            for (let i = 0; i < amount; i++) {
+                const plant = Plant({
+                    name: faker.lorem.slug(5),
+                    description: faker.lorem.text(),
+                    type: faker.food.fruit()
+                })
+                const saved = await plant.save();
+                plants.push(saved)
+            }
+
+            res.json(plants)
+        } else {
+            next()
+        }
+    } catch (e){
+        res.status(500).json({message: "een server error"})
     }
-
-    res.json(plants)
-
 })
-
+// normale POST
 router.post("/", async (req, res) => {
     try {
         if (!req.body?.type || !req.body?.description || !req.body?.name) {
@@ -131,20 +140,45 @@ router.delete("/:id", async (req, res) => {
     }
 
 })
-router.put("/:id", async (req, res) => {
-    try {
-        const plantId = req.params.id;
 
-        if (!mongoose.Types.ObjectId.isValid(plantId)) {
-            return res.status(400).json({message: "id is niet valid"});
-        }
+router.patch("/:id",async (req, res) => {
+    try{
+        const plantId = req.params.id
 
-        const {name, description, type} = req.body ?? {};
+        const {description, name, type} = req.body ?? null
 
         if (!name && !description && !type) {
             return res.status(400).json({
                 message: "de velden moeten verplicht ingevoerd worden",
-            });
+            })
+        }
+        const updated = await Plant.findByIdAndUpdate(
+            plantId,
+            {...(name && {name}), ...(description && {description}), ...(type && {type})},
+            {new: true, runValidators: true}
+        );
+        if (!updated) {
+            return res.status(404).json({message: "de plant is niet gevonden"})
+        }
+        res.status(200).json(updated)
+    } catch (e){
+        res.status(500)
+    }
+})
+router.put("/:id", async (req, res) => {
+    try {
+        const plantId = req.params.id
+
+        if (!mongoose.Types.ObjectId.isValid(plantId)) {
+            return res.status(400).json({message: "id is niet valid"})
+        }
+
+        const {name, description, type} = req.body ?? {}
+
+        if (!name && !description && !type) {
+            return res.status(400).json({
+                message: "de velden moeten verplicht ingevoerd worden",
+            })
         }
 
         const updated = await Plant.findByIdAndUpdate(
@@ -154,16 +188,16 @@ router.put("/:id", async (req, res) => {
         );
 
         if (!updated) {
-            return res.status(404).json({message: "de plant is niet gevonden"});
+            return res.status(404).json({message: "de plant is niet gevonden"})
         }
 
-        res.status(200).json(updated);
+        res.status(200).json(updated)
     } catch (e) {
         if (e?.name === "ValidationError") {
-            return res.status(400).json({message: e.message});
+            return res.status(400).json({message: e.message})
         }
-        res.status(500).json({message: "gefaald om de plant te updaten"});
+        res.status(500).json({message: "gefaald om de plant te updaten"})
     }
-});
+})
 
 export default router

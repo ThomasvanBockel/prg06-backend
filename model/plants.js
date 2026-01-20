@@ -22,6 +22,7 @@ const plantsSchema = new mongoose.Schema({
                 };
 
                 delete ret._id;
+               
             },
         },
 
