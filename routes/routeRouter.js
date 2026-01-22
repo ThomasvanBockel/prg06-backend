@@ -4,7 +4,6 @@ import {faker} from "@faker-js/faker/locale/nl";
 import mongoose from "mongoose";
 
 
-
 const router = express.Router()
 router.use((req, res, next) => {
     const acceptHeader = req.headers["accept"];
@@ -19,7 +18,27 @@ router.use((req, res, next) => {
 });
 router.get("/", async (req, res) => {
     res.set("Access-Control-Allow-Origin", "*")
-    const plants = await Plant.find()
+    let currentPage = 1
+    currentPage = Number(req.query.page)
+    if (!currentPage) {
+        currentPage = 1
+    }
+    let amount = await Plant.countDocuments()
+    let limit = Number(req.query.limit)
+    if (!limit) {
+        limit = amount
+    }
+    let totalPages = Math.ceil(amount / limit) ?? 1
+    if (!totalPages) {
+        totalPages = 1
+    }
+    const skip = (currentPage - 1) * limit
+    let previousPage = currentPage - 1
+    let nextPage = currentPage + 1
+
+
+    const plants = await Plant.find().limit(limit).skip(skip)
+
     const items = plants.map((plant) => ({
         id: plant.id,
         name: plant.name,
@@ -32,10 +51,41 @@ router.get("/", async (req, res) => {
     const collections = {
         items,
         _links: {
-            self: {href: `${process.env.BASE_URI}`},
+            self: totalPages !== 1 ? {href: `${process.env.BASE_URI}?page=${currentPage}&limit=${limit}`} : {href: `${process.env.BASE_URI}`},
             collection: {href: `${process.env.BASE_URI}`},
         },
-    };
+        pagination: {
+            currentPage: currentPage,
+            currentItems: limit,
+            totalPages: totalPages,
+            totalItems: amount,
+            _links: {
+                first: totalPages !== 1 ? {
+                    page: 1,
+                    href: `${process.env.BASE_URI}?page=1&limit=${limit}`
+                } : {
+                    page: 1,
+                    href: `${process.env.BASE_URI}`
+                },
+                last: totalPages !== 1 ? {
+                    page: totalPages,
+                    href: `${process.env.BASE_URI}?page=${totalPages}&limit=${limit}`
+                } : {
+                    page: 1,
+                    href: `${process.env.BASE_URI}`
+                },
+                previous: previousPage > 0 ? {
+                    page: previousPage,
+                    href: `${process.env.BASE_URI}?page=${previousPage}&limit=${limit}`
+                } : null,
+                next: nextPage > currentPage && totalPages !== 1 ? {
+                    page: nextPage,
+                    href: `${process.env.BASE_URI}?page=${nextPage}&limit=${limit}`
+                } : null
+            }
+        }
+    }
+
     res.json(collections)
 });
 
@@ -80,7 +130,7 @@ router.post("/", async (req, res, next) => {
         } else {
             next()
         }
-    } catch (e){
+    } catch (e) {
         res.status(500).json({message: "een server error"})
     }
 })
@@ -131,7 +181,7 @@ router.get("/:id", async (req, res) => {
             return res.status(304).send();
         }
 
-res.header("h")
+        res.header("h")
 
         res.status(200).json(plant)
     } catch (e) {
@@ -158,8 +208,8 @@ router.delete("/:id", async (req, res) => {
 
 })
 
-router.patch("/:id",async (req, res) => {
-    try{
+router.patch("/:id", async (req, res) => {
+    try {
         const plantId = req.params.id
 
         const {description, name, type} = req.body ?? null
@@ -178,7 +228,7 @@ router.patch("/:id",async (req, res) => {
             return res.status(404).json({message: "de plant is niet gevonden"})
         }
         res.status(200).json(updated)
-    } catch (e){
+    } catch (e) {
         res.status(500)
     }
 })
