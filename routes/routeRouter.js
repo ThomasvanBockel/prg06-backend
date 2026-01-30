@@ -103,7 +103,7 @@ router.options(
     "/:id", (req, res) => {
         res.header("Allow", "PUT, PATCH, GET, OPTIONS, DELETE")
 
-        res.setHeader("Access-Control-Allow-Methods", "GET, PUT, OPTIONS, DELETE")
+        res.setHeader("Access-Control-Allow-Methods", "GET, PUT, PATCH, OPTIONS, DELETE")
         res.setHeader("Access-Control-Allow-Origin", "*")
         res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept")
         res.status(204).send()
