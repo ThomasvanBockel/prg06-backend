@@ -101,7 +101,7 @@ router.options("/", (req, res) => {
 })
 router.options(
     "/:id", (req, res) => {
-        res.header("Allow", "PUT, GET, OPTIONS, DELETE")
+        res.header("Allow", "PUT, PATCH, GET, OPTIONS, DELETE")
 
         res.setHeader("Access-Control-Allow-Methods", "GET, PUT, OPTIONS, DELETE")
         res.setHeader("Access-Control-Allow-Origin", "*")
