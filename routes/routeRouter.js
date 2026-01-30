@@ -167,10 +167,12 @@ router.get("/:id", async (req, res) => {
         }
 
         const plant = await Plant.findById(plantId);
+
         const modifiedDate = req.headers["if-modified-since"];
+        
         let lastModified = plant.updatedAt;
 
-        if (plant == null) {
+        if (!plant) {
             return res.status(404).json({message: "plant bestaat niet"})
         }
 
