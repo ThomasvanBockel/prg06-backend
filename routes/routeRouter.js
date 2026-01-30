@@ -169,7 +169,7 @@ router.get("/:id", async (req, res) => {
         const plant = await Plant.findById(plantId);
 
         const modifiedDate = req.headers["if-modified-since"];
-        
+
         let lastModified = plant.updatedAt;
 
         if (!plant) {
@@ -186,8 +186,6 @@ router.get("/:id", async (req, res) => {
         if (modifiedDate && new Date(modifiedDate) >= lastModified) {
             return res.status(304).send();
         }
-
-        res.header("h")
 
         res.status(200).json(plant)
     } catch (e) {
