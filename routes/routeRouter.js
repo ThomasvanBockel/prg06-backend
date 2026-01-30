@@ -8,6 +8,9 @@ const router = express.Router()
 router.use((req, res, next) => {
     const acceptHeader = req.headers["accept"];
     const method = req.method
+
+    res.set("Access-Control-Allow-Origin", "*")
+
     console.log(`Client accepteert: ${acceptHeader}`);
     if (acceptHeader.includes("application/json") || method === "OPTIONS") {
         console.log(`this is JSON`)
@@ -17,7 +20,6 @@ router.use((req, res, next) => {
     }
 });
 router.get("/", async (req, res) => {
-    res.set("Access-Control-Allow-Origin", "*")
     let currentPage = 1
     currentPage = Number(req.query.page)
     if (!currentPage) {
@@ -78,7 +80,7 @@ router.get("/", async (req, res) => {
                     page: previousPage,
                     href: `${process.env.BASE_URI}?page=${previousPage}&limit=${limit}`
                 } : null,
-                next: nextPage > currentPage && totalPages !== 1 ? {
+                next: currentPage < totalPages && totalPages !== 1 ? {
                     page: nextPage,
                     href: `${process.env.BASE_URI}?page=${nextPage}&limit=${limit}`
                 } : null
@@ -156,7 +158,7 @@ router.post("/", async (req, res) => {
 
 
 router.get("/:id", async (req, res) => {
-    res.set("Access-Control-Allow-Origin", "*")
+
     try {
         const plantId = req.params.id;
         const plant = await Plant.findById(plantId);
