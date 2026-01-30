@@ -216,7 +216,7 @@ router.patch("/:id", async (req, res) => {
     try {
         const plantId = req.params.id
 
-        const {description, name, type} = req.body ?? null
+        const {description, name, type} = req.body ?? {}
 
         if (!name && !description && !type) {
             return res.status(400).json({
