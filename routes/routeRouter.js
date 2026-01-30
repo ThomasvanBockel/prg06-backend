@@ -161,15 +161,17 @@ router.get("/:id", async (req, res) => {
 
     try {
         const plantId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(plantId)) {
+            return res.status(404).json({message: "id is niet valid"})
+        }
+
         const plant = await Plant.findById(plantId);
         const modifiedDate = req.headers["if-modified-since"];
         let lastModified = plant.updatedAt;
 
         if (plant == null) {
-            return res.status(404).json({message: "id bestaat niet"})
-        }
-        if (!mongoose.Types.ObjectId.isValid(plantId)) {
-            return res.status(404).json({message: "id is niet valid"})
+            return res.status(404).json({message: "plant bestaat niet"})
         }
 
 
