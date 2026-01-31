@@ -246,7 +246,7 @@ router.put("/:id", async (req, res) => {
 
         const {name, description, type} = req.body ?? {}
 
-        if (!name && !description && !type) {
+        if (!name || !description || !type) {
             return res.status(400).json({
                 message: "de velden moeten verplicht ingevoerd worden",
             })
